@@ -4,10 +4,10 @@ import { useAction, useMutation, useQuery } from "convex/react"
 import { useState, useEffect, useMemo } from "react"
 import {
   CalculatorIcon,
+  CarFrontIcon,
   ClockIcon,
   CrownIcon,
   FileTextIcon,
-  GlobeIcon,
   LandmarkIcon,
   MailIcon,
   MegaphoneIcon,
@@ -54,8 +54,13 @@ import { ChatQuoteCard } from "@/components/chat-quote-card"
 import {
   ChatFinanceCard,
   ChatFollowUpCard,
-  ChatPublishCard,
 } from "@/components/chat-dealership-cards"
+import {
+  ChatCarIntakeModal,
+  extractCarDraftFromConversation,
+  isCarAddIntakeMessage,
+  type ExtractedCarDraft,
+} from "@/components/chat-car-intake-modal"
 import {
   parseFilePartToContext,
   PromptInputAttachmentTray,
@@ -69,7 +74,6 @@ import {
   formatZar,
   parseFinanceIntentFromText,
   parseFollowUpIntentFromText,
-  parsePublishIntentFromText,
   SA_SHOWROOM_VEHICLES,
   type ShowroomVehicle,
 } from "@/lib/sa-dealership"
@@ -196,6 +200,10 @@ export function Chat({
   const [lastUploadedImageUrl, setLastUploadedImageUrl] = useState<
     string | undefined
   >(undefined)
+  const [carIntakeModalOpen, setCarIntakeModalOpen] = useState(false)
+  const [carIntakeDraft, setCarIntakeDraft] = useState<ExtractedCarDraft>(() =>
+    extractCarDraftFromConversation("")
+  )
 
   const currentBot =
     selectableBots.find((b) => b.id === selectedBotId) ?? activeBots[0]
@@ -371,18 +379,9 @@ export function Chat({
         .catch(() => null)
     }
 
-    // Auto-open relevant Dealership Action Studio in DesktopPanel
+    // Auto-open relevant Dealership Action Studio in DesktopPanel (never auto-pop publisher modal on chat)
     if (desktop) {
       if (
-        /publish|cars\.co\.za|autotrader|syndicat|own\s*(?:website|site)|list.*car|post.*car/i.test(
-          text
-        ) &&
-        (targetDomain.isPublisher || targetDomain.isMaster || targetDomain.hasSkill("multi_publish"))
-      ) {
-        desktop.setOpen(true)
-        desktop.setActiveTab("actions")
-        desktop.setActionSubView("publisher")
-      } else if (
         /finance|wesbank|absa|mfc|nedbank|standard\s*bank|capitec|signio|instalment|installment|balloon|fica|auto.?apply/i.test(
           text
         ) &&
@@ -507,7 +506,7 @@ export function Chat({
           "=== MASTER ROLE: AUTOPULSE DEALERSHIP HQ (GROK-STYLE SUPER ORCHESTRATOR · SOUTH AFRICA) ===",
           "- You are the single unified South African Car Dealership AI Director. All specialist agents (and every custom agent added by the dealer) report under you AND can run independently.",
           "- You can execute ANY dealership workflow directly from this single chat in one shot:",
-          "  1. **Multi-Portal Vehicle Publishing**: Draft SA SEO copy & publish any showroom vehicle simultaneously to **Cars.co.za (DAP XML)**, **AutoTrader SA**, **Own Website (/showroom)**, and **Facebook Marketplace**.",
+          "  1. **Add Car to Databases & Portals**: Keep it simple — confirm the car photos & details provided, ask which places to add it to (Our Database & Website, Cars.co.za, AutoTrader SA, Facebook Marketplace), and ask for any missing info (never output tables).",
           "  2. **SA Multi-Bank Finance Auto-Apply**: Calculate exact NCA monthly instalments (SA Prime 11.25%, deposit, trade-in equity, balloon/residual 0-35%, 48/60/72m, R1,207.50 initiation, R69 admin), verify 5 FICA docs, and auto-submit dossiers to **WesBank, Absa Vehicle Finance, MFC (Nedbank), Standard Bank VAF & Capitec via Signio**.",
           "  3. **Follow-Up & Test-Drive Conversion**: Trigger 15-min Speed-to-Lead, 24h Test-Drive Hold, 48h FICA Chase, and 72h Price-Drop WhatsApp/Email cadences.",
           "  4. **Offer to Purchase (OTP) PDFs**, **TransUnion Trade-In Appraisals**, **Showroom TikTok Walkaround Reels**, and **Live Daytona Cloud Browser** portal actions.",
@@ -518,9 +517,13 @@ export function Chat({
           .join("\n")
       } else if (targetDomain.isPublisher) {
         botSpecialization = [
-          "=== SPECIALIST: PORTAL PUBLISHER AGENT (CARS.CO.ZA, AUTOTRADER SA & OWN SITE) ===",
-          "- You specialize in South African multi-portal vehicle syndication: **Cars.co.za (Dealer Admin Platform XML)**, **AutoTrader South Africa (DMS XML)**, the dealership's **Own Website (`/showroom`)**, and **Facebook Marketplace**.",
-          "- Whenever asked to publish a car: output (1) Verified Stock #, VIN, Year/Make/Model/Variant, Mileage, Colour & Retail Price ZAR, (2) Compelling South African showroom listing headline & SEO description highlighting FSH, DEKRA/AA check, balance of service/motorplan, and est. monthly instalment, (3) Multi-Portal Syndication Table (| Portal | Feed Format | Status | Action |) covering Cars.co.za, AutoTrader SA, Own Website (`/showroom`), and Facebook Marketplace, and (4) remind the user they can click **'Publish to Portals'** on the interactive skill card right below your message.",
+          "=== SPECIALIST: VEHICLE LISTING & DATABASE AGENT ===",
+          "- Keep adding and listing cars super simple and conversational. NEVER output Markdown tables or long templates.",
+          "- When the user wants to add a car to the database or attaches car images/details:",
+          "  1. Briefly confirm the car details and photos you already see.",
+          "  2. Ask simply which places they want to add it to: Our Database & Website, Cars.co.za, AutoTrader SA, or Facebook Marketplace.",
+          "  3. Ask only for the missing details needed (e.g. Make, Model, Year, Price in ZAR, Mileage in km, Colour, Transmission/Fuel, VIN).",
+          "  4. Mention they can reply right here or click 'Fill Missing Info & Choose Places' below to type the missing details in the quick modal.",
         ].join("\n")
       } else if (targetDomain.isFinance) {
         botSpecialization = [
@@ -546,7 +549,7 @@ export function Chat({
         botSpecialization = [
           "=== SPECIALIST: DEAL & QUOTE AGENT (OFFER TO PURCHASE & PRO-FORMA PDF) ===",
           "- You produce South African 15% VAT-compliant Vehicle Offers to Purchase (OTP) & Pro-Forma Tax Invoices in ZAR.",
-          "- Include OTP Reference (e.g. `OTP-2026-2401`), Buyer Name, Vehicle Specs & VIN, Markdown breakdown table (`| Stock / Code | Description | Qty | Price (ZAR) |`) covering Vehicle Excl. VAT, On-The-Road (eNaTIS Registration & DEKRA COR), Optional Extras, Subtotal, 15% SA VAT, Grand Total, Reservation Deposit link (`/pay/{dealId}`), and note the interactive **Download PDF** card below.",
+          "- Include OTP Reference (e.g. `OTP-2026-2401`), Buyer Name, Vehicle Specs & VIN, a clean bulleted price breakdown covering Vehicle Excl. VAT, On-The-Road (eNaTIS Registration & DEKRA COR), Optional Extras, Subtotal, 15% SA VAT, Grand Total, Reservation Deposit link (`/pay/{dealId}`), and note the interactive **Download PDF** card below. Never output Markdown tables.",
         ].join("\n")
       } else if (targetDomain.isWhatsApp) {
         botSpecialization = [
@@ -591,7 +594,8 @@ export function Chat({
         `- NEVER talk about selling spare auto parts or workshops — we are a New & Used Car Dealership selling vehicles.`,
         `- NEVER output filler/holding phrases like 'Hold on while I fetch...'. Deliver the complete, actionable dealership output immediately in one shot.`,
         `- When the user attaches documents (PDFs, Word .docx, CSV stock lists, FICA payslips/IDs) or images (car photos, NaTIS discs), explicitly acknowledge and use the exact extracted figures, VINs, SA ID numbers, rows, or visual details from the ATTACHED DOCUMENTS & IMAGES section above.`,
-        `- Use structured Markdown Tables for vehicle specs, multi-portal publishing status, finance bank comparisons, trade-in valuations, and Offers to Purchase.`,
+        `- NEVER output Markdown tables (no | col | col | pipe tables) in chat responses. Keep replies simple, clean, and conversational with short sentences or plain bullet points.`,
+        `- When the user asks to add a car to our databases/website/portals (or attaches car photos + info), keep it simple: confirm what info/photos you received, ask which places they want to add it to (Our Database & Website, Cars.co.za, AutoTrader SA, Facebook Marketplace), and ask for any missing details (price, mileage, year, make/model, colour, VIN). Let them know they can reply in chat or click 'Fill Missing Info & Choose Places' below.`,
         `- Put ready-to-send WhatsApp or Email messages inside clean blockquotes (> ...).`,
       ]
         .filter(Boolean)
@@ -685,7 +689,7 @@ export function Chat({
 
       <Conversation>
         <ConversationContent className="mx-auto w-full max-w-3xl">
-          {messages.map((message) => {
+          {messages.map((message, index) => {
             const author =
               message.role === "assistant" && message.botId
                 ? botMap.get(message.botId)
@@ -696,20 +700,27 @@ export function Chat({
                 ? botMap.get(message.targetBotId)
                 : undefined
 
+            const previousUserMessage =
+              message.role === "assistant"
+                ? messages
+                    .slice(0, index)
+                    .reverse()
+                    .find((m) => m.role === "user")?.text ?? ""
+                : ""
+
             const quoteData =
               message.role === "assistant"
                 ? parseQuoteFromText(message.text)
                 : null
-            const publishAction =
-              message.role === "assistant"
-                ? parsePublishIntentFromText(message.text, showroomInventory)
-                : null
+            const showCarIntakeButton =
+              message.role === "assistant" &&
+              isCarAddIntakeMessage(message.text, previousUserMessage)
             const financeAction =
               message.role === "assistant"
                 ? parseFinanceIntentFromText(message.text, showroomInventory)
                 : null
             const followUpAction =
-              message.role === "assistant" && !financeAction && !publishAction
+              message.role === "assistant" && !financeAction && !showCarIntakeButton
                 ? parseFollowUpIntentFromText(message.text, showroomInventory)
                 : null
 
@@ -750,12 +761,29 @@ export function Chat({
                   )}
                   <MessageResponse>{message.text}</MessageResponse>
 
-                  {/* Grok-Style Interactive Dealership Skill Cards */}
-                  {publishAction && (
-                    <ChatPublishCard
-                      action={publishAction}
-                      imageUrl={lastUploadedImageUrl}
-                    />
+                  {/* Simple trigger to fill missing car details & pick target places */}
+                  {showCarIntakeButton && (
+                    <div className="mt-2.5 flex flex-wrap items-center gap-2">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          const recentContext = messages
+                            .slice(Math.max(0, index - 4), index + 1)
+                            .map((m) => m.text)
+                            .join("\n")
+                          setCarIntakeDraft(
+                            extractCarDraftFromConversation(recentContext)
+                          )
+                          setCarIntakeModalOpen(true)
+                        }}
+                        className="h-8 gap-1.5 border-sky-500/35 bg-sky-500/10 text-xs font-medium text-sky-200 hover:bg-sky-500/20 cursor-pointer"
+                      >
+                        <CarFrontIcon className="size-3.5 text-sky-400" />
+                        Fill Missing Info &amp; Choose Places
+                      </Button>
+                    </div>
                   )}
                   {financeAction && <ChatFinanceCard action={financeAction} />}
                   {followUpAction && <ChatFollowUpCard action={followUpAction} />}
@@ -847,23 +875,6 @@ export function Chat({
                     ))}
                   </PromptInputSelectContent>
                 </PromptInputSelect>
-              )}
-
-              {desktop && (currentDomain.isPublisher || currentDomain.hasSkill("multi_publish")) && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    desktop.setOpen(true)
-                    desktop.setActiveTab("actions")
-                    desktop.setActionSubView("publisher")
-                  }}
-                  className="h-8 gap-1.5 border border-sky-500/25 bg-sky-500/10 px-2.5 text-xs font-medium text-sky-300 hover:bg-sky-500/20 cursor-pointer"
-                >
-                  <GlobeIcon className="size-3.5" />
-                  Publish Car
-                </Button>
               )}
 
               {desktop && (currentDomain.isFinance || currentDomain.hasSkill("finance_auto_apply")) && (
@@ -987,6 +998,23 @@ export function Chat({
           </PromptInputFooter>
         </PromptInput>
       </div>
+      <ChatCarIntakeModal
+        open={carIntakeModalOpen}
+        onOpenChange={setCarIntakeModalOpen}
+        initialDraft={carIntakeDraft}
+        initialImageUrl={lastUploadedImageUrl}
+        onSaved={async ({ stockNumber, title, priceZar, places }) => {
+          const replyBotId = (currentBot?.id ?? activeBots[0]?.id) as
+            | Id<"teammate_bots">
+            | undefined
+          if (!replyBotId) return
+          await saveReplyMut({
+            chatId: chatId as Id<"teammate_chats">,
+            botId: replyBotId,
+            text: `Done! **${title}** (${formatZar(priceZar)}, Stock #${stockNumber}) has been added to: ${places.join(", ")}.`,
+          }).catch(() => null)
+        }}
+      />
     </div>
   )
 }
