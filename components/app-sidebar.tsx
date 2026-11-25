@@ -5,11 +5,10 @@ import Link from "next/link"
 import { useRouter, useParams } from "next/navigation"
 import { formatDistanceToNowStrict } from "date-fns"
 import {
-  CarFront,
   ChevronDown,
   ChevronRight,
   Crown,
-  Gauge,
+  Globe,
   LayoutGrid,
   MoreHorizontal,
   Trash2,
@@ -25,7 +24,6 @@ import { useQuery, useMutation } from "convex/react"
 import { api } from "@/convex/_generated/api"
 import type { Id } from "@/convex/_generated/dataModel"
 import { useAgentRunner } from "@/components/agent-runner-provider"
-import { AiTeammatesLogo } from "@/components/ai-teammates-logo"
 import { BotDialog } from "@/components/bot-dialog"
 import { ChatAvatar } from "@/components/chat-avatar"
 import { ChatMenuButton } from "@/components/chat-menu-button"
@@ -315,25 +313,12 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
-        <div className="flex items-center justify-between px-2 pt-1.5 pb-1">
+        <div className="flex items-center justify-between px-2 pt-2 pb-1">
           <Link
             href="/"
-            className="group flex items-center gap-2.5 rounded-lg p-0.5 transition-colors hover:opacity-95"
+            className="truncate text-sm font-semibold tracking-tight text-zinc-100 hover:text-white transition-colors group-data-[collapsible=icon]:hidden"
           >
-            <AiTeammatesLogo size={32} />
-            <div className="flex flex-col leading-tight group-data-[collapsible=icon]:hidden">
-              <div className="flex items-center gap-1.5">
-                <span className="font-semibold text-sm tracking-tight text-zinc-100 group-hover:text-white transition-colors">
-                  AutoPulse Motors
-                </span>
-                <span className="inline-flex items-center rounded bg-sky-500/10 px-1.5 py-0.2 text-[9px] font-mono font-medium text-sky-400 border border-sky-500/20">
-                  ZA
-                </span>
-              </div>
-              <span className="text-[10px] text-zinc-400 font-mono tracking-wider uppercase">
-                Car Dealership AI
-              </span>
-            </div>
+            AutoPulse Motors
           </Link>
           <div className="group-data-[collapsible=icon]:hidden">
             <CreateMenu bots={bots} />
@@ -352,35 +337,6 @@ export function AppSidebar() {
             </SearchCommandItem>
           ))}
         </SearchCommand>
-
-        {/* Prominent AutoPulse CRM Button right at top of sidebar */}
-        <div className="px-2 pt-1 group-data-[collapsible=icon]:px-0">
-          <SidebarMenuButton
-            render={<Link href="/dashboard/crm" />}
-            tooltip="Open AutoPulse CRM & Deal Pipeline"
-            className="h-auto p-0 cursor-pointer overflow-hidden rounded-xl border border-emerald-500/35 bg-gradient-to-r from-emerald-500/15 via-emerald-500/10 to-zinc-900/60 hover:from-emerald-500/25 hover:border-emerald-500/55 text-zinc-100 hover:text-white transition-all shadow-sm group"
-          >
-            <div className="flex w-full items-center justify-between px-3 py-2">
-              <div className="flex items-center gap-2.5">
-                <div className="flex size-6 shrink-0 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-400">
-                  <LayoutGrid className="size-3.5" />
-                </div>
-                <div className="flex flex-col text-left">
-                  <span className="text-xs font-bold tracking-tight text-zinc-100">
-                    AutoPulse CRM
-                  </span>
-                  <span className="text-[10px] text-zinc-400 font-mono">
-                    Pipeline &amp; Deals
-                  </span>
-                </div>
-              </div>
-              <div className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 text-[9px] font-mono font-medium text-emerald-400 shrink-0">
-                <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                <span>CRM</span>
-              </div>
-            </div>
-          </SidebarMenuButton>
-        </div>
       </SidebarHeader>
 
       <SidebarContent className="group-data-[collapsible=icon]:overflow-auto">
@@ -463,59 +419,26 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter>
-        <SidebarMenu className="gap-1.5">
+        <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
               render={<Link href="/dashboard/crm" />}
-              tooltip="Open AutoPulse CRM & Deal Pipeline"
-              className="h-auto p-0 cursor-pointer overflow-hidden rounded-xl border border-emerald-500/35 bg-gradient-to-r from-emerald-500/15 via-zinc-900/80 to-zinc-900/40 hover:from-emerald-500/25 hover:border-emerald-500/55 text-zinc-100 hover:text-white transition-all shadow-sm group"
+              tooltip="CRM"
+              className="cursor-pointer"
             >
-              <div className="flex w-full items-center justify-between px-3 py-2.5">
-                <div className="flex items-center gap-2.5">
-                  <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-400">
-                    <LayoutGrid className="size-4" />
-                  </div>
-                  <div className="flex flex-col text-left">
-                    <span className="text-xs font-bold tracking-tight text-zinc-100">
-                      AutoPulse CRM
-                    </span>
-                    <span className="text-[10px] text-zinc-400 font-mono">
-                      Leads, Deals &amp; SA Finance
-                    </span>
-                  </div>
-                </div>
-                <div className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 text-[9px] font-mono font-medium text-emerald-400 shrink-0">
-                  <span className="size-1.5 rounded-full bg-emerald-400" />
-                  <span>CRM</span>
-                </div>
-              </div>
+              <LayoutGrid className="size-4" />
+              <span>CRM</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
 
           <SidebarMenuItem>
             <SidebarMenuButton
               render={<Link href="/showroom" />}
-              tooltip="Open Live Website Showroom (/showroom)"
-              className="h-auto p-0 cursor-pointer overflow-hidden rounded-xl border border-sky-500/25 bg-gradient-to-r from-sky-500/10 via-zinc-900/80 to-zinc-900/40 hover:from-sky-500/20 hover:border-sky-500/45 text-zinc-100 hover:text-white transition-all shadow-sm group"
+              tooltip="Live Website"
+              className="cursor-pointer"
             >
-              <div className="flex w-full items-center justify-between px-3 py-2">
-                <div className="flex items-center gap-2.5">
-                  <div className="flex size-6 shrink-0 items-center justify-center rounded-lg bg-sky-500/20 text-sky-400">
-                    <CarFront className="size-3.5" />
-                  </div>
-                  <div className="flex flex-col text-left">
-                    <span className="text-xs font-bold tracking-tight text-zinc-100">
-                      Own Website
-                    </span>
-                    <span className="text-[10px] text-zinc-400 font-mono">
-                      Live /showroom
-                    </span>
-                  </div>
-                </div>
-                <span className="rounded-full bg-sky-500/15 border border-sky-500/30 px-2 py-0.5 text-[9px] font-mono text-sky-300">
-                  Public
-                </span>
-              </div>
+              <Globe className="size-4" />
+              <span>Live Website</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
 
