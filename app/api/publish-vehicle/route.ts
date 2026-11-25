@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
     const make = body.make ?? matchedVehicle?.make
     const model = body.model ?? matchedVehicle?.model
     const variant = body.variant ?? matchedVehicle?.variant ?? ""
-    const priceZar = body.priceZar ?? matchedVehicle?.priceZar
+    const priceZar = body.priceZar ?? body.retailPriceZar ?? matchedVehicle?.retailPriceZar
     const mileageKm = body.mileageKm ?? matchedVehicle?.mileageKm ?? 0
     const vin = body.vin ?? matchedVehicle?.vin ?? "VERIFIED-ZA"
     const portals: PortalSlug[] = body.portals ?? [

@@ -509,7 +509,8 @@ export const listPublicShowroom = query({
   handler: async (ctx) => {
     const rows = await ctx.db.query("vehicle_inventory").order("desc").take(100)
     if (rows.length === 0) {
-      return DEFAULT_SA_SHOWROOM.filter((vRow) => vRow.status !== "sold")
+      // Every seed row is unsold, so the whole fallback list is public inventory.
+      return DEFAULT_SA_SHOWROOM
     }
     return rows.filter((vRow) => vRow.status !== "sold")
   },
@@ -1250,22 +1251,32 @@ export const submitShowroomEnquiry = mutation({
     }
 
     // 2. Create CRM Deal in pipeline
-    const dealId = await ctx.db.insert("deals", {
+    const dealChannel =
+      sourceLabel === "whatsapp"
+        ? "whatsapp"
+        : sourceLabel === "facebook_marketplace"
+          ? "meta_lead"
+          : sourceLabel === "instagram"
+            ? "instagram"
+            : sourceLabel === "tiktok_ads"
+              ? "tiktok_lead"
+              : "dashboard"
+    const dealStage = args.enquiryType === "test_drive" ? "new_rfq" : "quoted"
+    const dealId = await ctx.db.insert("deals_and_quotes", {
       contactId: contact._id,
-      title: `${args.vehicleTitle} (${args.stockNumber})`,
-      stage: args.enquiryType === "finance" ? "QUOTE_SENT" : "NEW_LEAD",
-      totalValue: args.vehiclePriceZar,
-      currency: "ZAR",
-      assignedAgent:
-        args.enquiryType === "finance" ? "Finance & F&I Agent" : "Follow-Up Agent",
-      items: [
+      channel: dealChannel,
+      requestedParts: [
         {
-          partName: args.vehicleTitle,
-          oemNumber: args.stockNumber,
+          sku: args.stockNumber,
+          description: args.vehicleTitle,
           quantity: 1,
           unitPrice: args.vehiclePriceZar,
         },
       ],
+      status: dealStage,
+      totalAmount: args.vehiclePriceZar,
+      coreDepositTotal: 0,
+      currency: "ZAR",
       notes: `Inbound ${sourceLabel} ${args.enquiryType} lead from ${args.buyerName} (${args.phone}). ${args.notes ?? ""}`.trim(),
       updatedAt: now,
     })
