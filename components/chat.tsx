@@ -8,7 +8,6 @@ import {
   ClockIcon,
   CrownIcon,
   FileTextIcon,
-  LandmarkIcon,
   MailIcon,
   MegaphoneIcon,
   SparklesIcon,
@@ -52,7 +51,6 @@ import { useAgentRunner } from "@/components/agent-runner-provider"
 import { parseQuoteFromText } from "@/lib/quote-pdf"
 import { ChatQuoteCard } from "@/components/chat-quote-card"
 import {
-  ChatFinanceCard,
   ChatFollowUpCard,
 } from "@/components/chat-dealership-cards"
 import {
@@ -72,7 +70,6 @@ import {
 } from "@/lib/document-context"
 import {
   formatZar,
-  parseFinanceIntentFromText,
   parseFollowUpIntentFromText,
   SA_SHOWROOM_VEHICLES,
   type ShowroomVehicle,
@@ -379,18 +376,9 @@ export function Chat({
         .catch(() => null)
     }
 
-    // Auto-open relevant Dealership Action Studio in DesktopPanel (never auto-pop publisher modal on chat)
+    // Auto-open relevant Dealership Action Studio in DesktopPanel (never auto-pop publisher or finance forms on chat)
     if (desktop) {
       if (
-        /finance|wesbank|absa|mfc|nedbank|standard\s*bank|capitec|signio|instalment|installment|balloon|fica|auto.?apply/i.test(
-          text
-        ) &&
-        (targetDomain.isFinance || targetDomain.isMaster || targetDomain.hasSkill("finance_auto_apply"))
-      ) {
-        desktop.setOpen(true)
-        desktop.setActiveTab("actions")
-        desktop.setActionSubView("finance")
-      } else if (
         /follow[- ]?up|cadence|test[- ]?drive|cold\s*lead|remind|chase/i.test(text) &&
         (targetDomain.isFollowUp || targetDomain.isMaster || targetDomain.hasSkill("whatsapp_followup"))
       ) {
@@ -527,11 +515,10 @@ export function Chat({
         ].join("\n")
       } else if (targetDomain.isFinance) {
         botSpecialization = [
-          "=== SPECIALIST: FINANCE & F&I AGENT (SA MULTI-BANK VAF AUTO-APPLIER) ===",
+          "=== SPECIALIST: FINANCE & F&I AGENT (SA MULTI-BANK VAF) ===",
           "- You specialize in South African Vehicle & Asset Finance (VAF) regulated by the National Credit Act (NCA) and FAIS.",
           "- Calculate exact ZAR monthly instalments using Prime Rate (11.25% + margin), Deposit, Trade-In Equity, Balloon/Residual (0–35%), 48/60/72m term, NCR Initiation Fee (R1,207.50), and R69 monthly admin fee.",
-          "- Always check NCA affordability (instalment vs gross income & living expenses), list the 5 mandatory FICA docs (SA Smart ID, Driver's Licence, 3M Stamped Bank Statements, 3M Payslips, Proof of Address), recommend VAPs (Extended Mechanical Warranty, Credit Shortfall, Tracker/Netstar, Scratch & Dent), and prepare simultaneous multi-bank submission across **WesBank, Absa Vehicle Finance, MFC (Nedbank), Standard Bank VAF & Capitec via Signio**.",
-          "- Note that the user can click **'Auto-Apply to Selected Banks'** on the live SA Finance card right below your reply.",
+          "- Check NCA affordability, list the 5 mandatory FICA docs (SA Smart ID, Driver's Licence, 3M Stamped Bank Statements, 3M Payslips, Proof of Address), recommend VAPs where helpful, and guide multi-bank submissions across **WesBank, Absa Vehicle Finance, MFC (Nedbank), Standard Bank VAF & Capitec via Signio** cleanly in chat without any tables or extra form cards.",
         ].join("\n")
       } else if (targetDomain.isFollowUp) {
         botSpecialization = [
@@ -715,12 +702,8 @@ export function Chat({
             const showCarIntakeButton =
               message.role === "assistant" &&
               isCarAddIntakeMessage(message.text, previousUserMessage)
-            const financeAction =
-              message.role === "assistant"
-                ? parseFinanceIntentFromText(message.text, showroomInventory)
-                : null
             const followUpAction =
-              message.role === "assistant" && !financeAction && !showCarIntakeButton
+              message.role === "assistant" && !showCarIntakeButton
                 ? parseFollowUpIntentFromText(message.text, showroomInventory)
                 : null
 
@@ -785,7 +768,6 @@ export function Chat({
                       </Button>
                     </div>
                   )}
-                  {financeAction && <ChatFinanceCard action={financeAction} />}
                   {followUpAction && <ChatFollowUpCard action={followUpAction} />}
                   {quoteData && <ChatQuoteCard quote={quoteData} />}
                 </MessageContent>
@@ -875,23 +857,6 @@ export function Chat({
                     ))}
                   </PromptInputSelectContent>
                 </PromptInputSelect>
-              )}
-
-              {desktop && (currentDomain.isFinance || currentDomain.hasSkill("finance_auto_apply")) && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    desktop.setOpen(true)
-                    desktop.setActiveTab("actions")
-                    desktop.setActionSubView("finance")
-                  }}
-                  className="h-8 gap-1.5 border border-emerald-500/25 bg-emerald-500/10 px-2.5 text-xs font-medium text-emerald-300 hover:bg-emerald-500/20 cursor-pointer"
-                >
-                  <LandmarkIcon className="size-3.5" />
-                  Finance VAF
-                </Button>
               )}
 
               {desktop && (currentDomain.isFollowUp || currentDomain.isWhatsApp || currentDomain.isMaster) && (
