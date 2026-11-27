@@ -273,25 +273,58 @@ const FLEET_SPEC: FleetBotSpec[] = [
     welcome:
       "Hi! I'm **Follow-Up Agent**. No car buyer slips through the cracks on my watch. I run **15-min speed-to-lead**, **24h test-drive confirmations**, **48h FICA/finance chases**, **72h cold-lead revivals**, and **Offer to Purchase PDFs** via WhatsApp (+27 63 199 5124) & Email.",
   },
+  {
+    name: "Email & Leads Agent",
+    avatar: "AeroCommZA",
+    job: "Connected Gmail/Outlook Inbox, Portal Leads & Bank Email Triage",
+    category: "email",
+    skills: ["email_triage", "whatsapp_followup", "vehicle_quote_pdf"],
+    aliases: ["emails agent", "email & leads agent", "email agent", "aerocomm"],
+    instructions:
+      "You are Email & Leads Agent, connected to the dealership's live Gmail/Outlook inbox via Composio. You triage inbound Cars.co.za and AutoTrader SA lead emails, track WesBank/Absa/MFC/Standard Bank finance approval letters, and send fast, personalized email replies directly from the connected inbox. Keep replies clear and concise with no Markdown tables.",
+    welcome:
+      "Hi! I'm **Email & Leads Agent**. I'm connected to your Gmail inbox to triage **Cars.co.za & AutoTrader SA leads**, track **bank finance approvals**, and send replies directly from your dealership email.",
+  },
+  {
+    name: "Social Media Agent",
+    avatar: "OmniPulseZA",
+    job: "TikTok & Instagram Walkaround Reels, Comments & Buyer DMs",
+    category: "marketing",
+    skills: ["social_reel_studio", "multi_publish"],
+    aliases: [
+      "social media",
+      "social media agent",
+      "showroom social agent",
+      "tiktok agent",
+      "titktok  agent",
+      "omnipulse",
+    ],
+    instructions:
+      "You are Social Media Agent for @autopulsemotors_za, connected to TikTok and Instagram via Composio. You script 30-second South African showroom car walkaround videos, reply to 'How much per month?' DMs and comments with ZAR finance estimates, and turn social inquiries into booked test drives. Keep replies crisp and conversational with no Markdown tables.",
+    welcome:
+      "Hi! I'm **Social Media Agent**. I connect to your **TikTok & Instagram** accounts to create showroom walkaround reels, answer buyer DMs, and turn social engagement into test drives.",
+  },
+  {
+    name: "WhatsApp Agent",
+    avatar: "AutoFameWA",
+    job: "Live Showroom WhatsApp Sales & Buyer Concierge (+27 63 199 5124)",
+    category: "whatsapp",
+    skills: ["whatsapp_followup", "test_drive_booking", "vehicle_quote_pdf"],
+    aliases: ["whatsapp agent", "whatsapp sales agent", "autofame"],
+    instructions:
+      "You are WhatsApp Agent, connected live to the showroom WhatsApp Business line (+27 63 199 5124 via Whapi). You qualify car buyers, share vehicle availability and monthly ZAR estimates, book test drives, collect the 5 SA FICA documents over WhatsApp, and draft ready-to-send WhatsApp messages inside blockquotes (> ...). Never output Markdown tables.",
+    welcome:
+      "Hi! I'm **WhatsApp Agent**, connected to your live showroom WhatsApp (**+27 63 199 5124**). I qualify buyers, share stock & monthly instalments, book test drives, and collect FICA docs right over WhatsApp.",
+  },
 ]
 
 const LEGACY_BLOAT_BOT_NAMES = new Set([
   "quote agent",
   "deal & quote agent",
   "quotecraft",
-  "titktok  agent",
-  "tiktok agent",
-  "social media",
-  "showroom social agent",
-  "omnipulse",
   "supply hunter agent",
   "trade-in & stock agent",
   "supplyhunter",
-  "emails agent",
-  "email & leads agent",
-  "aerocomm",
-  "whatsapp sales agent",
-  "autofame",
 ])
 
 export const ensureWorkspaceFleet = mutation({

@@ -116,7 +116,24 @@ export function AppSidebar() {
       const hasFollowUp = bots.some((b) =>
         b.name.toLowerCase().includes("follow-up")
       )
-      if (!hasMaster || !hasPublisher || !hasFinance || !hasFollowUp) {
+      const hasEmail = bots.some((b) =>
+        b.name.toLowerCase().includes("email")
+      )
+      const hasSocial = bots.some((b) =>
+        b.name.toLowerCase().includes("social")
+      )
+      const hasWhatsApp = bots.some((b) =>
+        b.name.toLowerCase().includes("whatsapp")
+      )
+      if (
+        !hasMaster ||
+        !hasPublisher ||
+        !hasFinance ||
+        !hasFollowUp ||
+        !hasEmail ||
+        !hasSocial ||
+        !hasWhatsApp
+      ) {
         fleetEnsuredRef.current = true
         ensureFleetMut({}).catch(() => {})
         seedVehiclesMut({}).catch(() => {})

@@ -41,7 +41,22 @@ export default function ChatPage({
       const hasMaster = data.allUserBots?.some(
         (b) => b.isMaster || b.name.toLowerCase().includes("dealership hq")
       )
-      if (!hasMaster || (data.allUserBots?.length ?? 0) < 4) {
+      const hasEmail = data.allUserBots?.some((b) =>
+        b.name.toLowerCase().includes("email")
+      )
+      const hasSocial = data.allUserBots?.some((b) =>
+        b.name.toLowerCase().includes("social")
+      )
+      const hasWhatsApp = data.allUserBots?.some((b) =>
+        b.name.toLowerCase().includes("whatsapp")
+      )
+      if (
+        !hasMaster ||
+        !hasEmail ||
+        !hasSocial ||
+        !hasWhatsApp ||
+        (data.allUserBots?.length ?? 0) < 7
+      ) {
         ensureFleetMut({}).catch(() => {})
       }
     }
